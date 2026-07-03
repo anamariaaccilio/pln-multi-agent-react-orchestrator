@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets / entorno
+.env
+*.key
+
+# Modelos y cachés pesados
+models/
+.cache/
+*.gguf
+*.bin
+*.safetensors
+
+# Vector stores locales (módulo de recuperación)
+*.faiss
+chroma_db/
+vectorstore/
+
+# Salidas generadas del pipeline (mantener carpeta, ignorar contenido)
+outputs/traces/*
+!outputs/traces/.gitkeep
+outputs/graph/*
+!outputs/graph/.gitkeep
+outputs/evaluation_ready/*
+!outputs/evaluation_ready/.gitkeep
+
+# SO / editores
+.DS_Store
+.idea/
+.vscode/

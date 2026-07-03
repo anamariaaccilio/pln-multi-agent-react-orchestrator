@@ -1,0 +1,28 @@
+# Configuración global del módulo de orquestación (Multi-Agent ReAct + LangGraph).
+# Estas claves se leen en src/config.py y se exponen como variables sueltas
+# (USE_FALLBACK_RETRIEVER, USE_FALLBACK_LLM, MAX_ITERATIONS, TOP_K,
+# MIN_EVIDENCE_SCORE, MAX_HALLUCINATION_RISK).
+
+retriever:
+  use_fallback: true   # false -> requiere register_retriever() con el retriever real del Data & Retrieval Layer
+  top_k: 5
+
+llm:
+  use_fallback: true   # false -> requiere pasar llm_fn real a multi_agent_rag(), o resolve_llm() via provider
+  provider: "fallback"  # fallback | local | gemini
+  model_name: "mistralai/Mistral-7B-Instruct-v0.3"
+  temperature: 0.2
+  max_new_tokens: 512
+
+agents:
+  max_iterations: 2
+  min_evidence_score: 0.70
+  max_hallucination_risk: 0.30
+
+paths:
+  traces_dir: "outputs/traces"
+  graph_dir: "outputs/graph"
+  eval_dir: "outputs/evaluation_ready"
+
+system:
+  system_type: "multi_agent_react"
