@@ -60,6 +60,9 @@ def writer_node(state: AgentState, agent_config=None) -> Dict[str, Any]:
 
     confidence = _confidence_level(evidence_score, hallucination_risk, forced_by_max_iterations)
 
+    print(f"\n[WRITER] Confidence: {confidence} | Warnings: {len(warnings)}")
+    print(f"[WRITER] Evidence score: {evidence_score:.2f} | Route: {route_decision}\n")
+
     if no_evidence:
         final_answer = (
             "No hay evidencia suficiente en el contexto recuperado para "

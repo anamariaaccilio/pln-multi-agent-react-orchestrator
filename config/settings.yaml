@@ -10,7 +10,7 @@ retriever:
 llm:
   use_fallback: false   # false -> requiere pasar llm_fn real a multi_agent_rag(), o resolve_llm() via provider
   provider: "gemini"  # fallback | local | gemini
-  model_name: "gemini-2.5-flash"
+  model_name: "gemini-2.5-flash-lite"
   temperature: 0.2
   max_new_tokens: 512
 
