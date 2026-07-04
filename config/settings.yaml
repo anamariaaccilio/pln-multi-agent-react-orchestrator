@@ -4,13 +4,13 @@
 # MIN_EVIDENCE_SCORE, MAX_HALLUCINATION_RISK).
 
 retriever:
-  use_fallback: true   # false -> requiere register_retriever() con el retriever real del Data & Retrieval Layer
+  use_fallback: false   # false -> requiere register_retriever() con el retriever real del Data & Retrieval Layer
   top_k: 5
 
 llm:
-  use_fallback: true   # false -> requiere pasar llm_fn real a multi_agent_rag(), o resolve_llm() via provider
-  provider: "fallback"  # fallback | local | gemini
-  model_name: "mistralai/Mistral-7B-Instruct-v0.3"
+  use_fallback: false   # false -> requiere pasar llm_fn real a multi_agent_rag(), o resolve_llm() via provider
+  provider: "gemini"  # fallback | local | gemini
+  model_name: "gemini-2.5-flash"
   temperature: 0.2
   max_new_tokens: 512
 
