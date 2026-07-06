@@ -1,13 +1,19 @@
-"""Construccion del grafo LangGraph: Investigador -> Auditor -> Redactor.
+"""Construccion del grafo LangGraph: Investigador -> Tools -> Investigador -> Auditor -> Redactor.
 
     START
       |
       v
-   researcher
+   researcher (plan)
+      |
+      v
+   tool_node
+      |
+      v
+   researcher (synthesize)
       |
       v
     auditor --route_after_audit-->  "writer"              --> writer --> END
-                               |---> "researcher" (ciclo)  --> researcher
+                               |---> "researcher" (ciclo)  --> researcher (plan) --> ...
                                '---> "writer_with_warning" --> writer --> END
 """
 from __future__ import annotations
@@ -22,12 +28,16 @@ from src.agents.researcher import researcher_node
 from src.agents.state import AgentState
 from src.agents.writer import writer_node
 from src.config import AgentConfig, DEFAULT_CONFIG
-from src.graph.routes import route_after_audit
+from src.graph.routes import route_after_audit, route_after_researcher
+from src.graph.tool_node import tool_node
 
 
 def build_agent_graph(config: Optional[AgentConfig] = None, llm_fn=None):
     """
     Construye y compila el grafo LangGraph del módulo de orquestación.
+
+    The researcher now operates in a ReAct tool-use loop:
+      researcher (plan) -> tool_node -> researcher (synthesize) -> auditor
 
     Args:
         config: AgentConfig con los umbrales/flags a usar. Por defecto DEFAULT_CONFIG.
@@ -40,12 +50,29 @@ def build_agent_graph(config: Optional[AgentConfig] = None, llm_fn=None):
     cfg = config or DEFAULT_CONFIG
     graph = StateGraph(AgentState)
 
+    # Nodes
     graph.add_node("researcher", partial(researcher_node, agent_config=cfg, llm_fn=llm_fn))
+    graph.add_node("tool_node", tool_node)
     graph.add_node("auditor", partial(auditor_node, agent_config=cfg))
     graph.add_node("writer", partial(writer_node, agent_config=cfg))
 
+    # Entry point
     graph.set_entry_point("researcher")
-    graph.add_edge("researcher", "auditor")
+
+    # Researcher -> conditional: either go to tool_node (plan) or auditor (synthesize done)
+    graph.add_conditional_edges(
+        "researcher",
+        route_after_researcher,
+        {
+            "tool_node": "tool_node",
+            "auditor": "auditor",
+        },
+    )
+
+    # Tool node always returns to researcher (for synthesis phase)
+    graph.add_edge("tool_node", "researcher")
+
+    # Auditor -> conditional: writer, researcher (reject cycle), or writer_with_warning
     graph.add_conditional_edges(
         "auditor",
         route_after_audit,
@@ -55,6 +82,8 @@ def build_agent_graph(config: Optional[AgentConfig] = None, llm_fn=None):
             "researcher": "researcher",
         },
     )
+
+    # Writer -> END
     graph.add_edge("writer", END)
 
     return graph.compile()

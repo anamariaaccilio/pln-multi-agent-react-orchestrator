@@ -26,6 +26,20 @@ class EvidenceChunk(TypedDict):
     score: float
 
 
+class ToolCall(TypedDict):
+    """A pending tool invocation from the researcher."""
+
+    tool_name: str
+    args: dict
+
+
+class ToolResult(TypedDict):
+    """The result of executing a tool."""
+
+    tool_name: str
+    observation: str
+
+
 class AgentState(TypedDict, total=False):
     """Estado compartido entre researcher_node, auditor_node y writer_node."""
 
@@ -37,6 +51,11 @@ class AgentState(TypedDict, total=False):
     draft_answer: str
     evidence_list: List[str]
     limitations: str
+
+    # Tool interaction (researcher <-> tool_node)
+    tool_calls: List[ToolCall]
+    tool_results: List[ToolResult]
+    researcher_step: str  # "plan" | "synthesize"
 
     # Salida del Agente Auditor
     audit_passed: bool

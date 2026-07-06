@@ -87,6 +87,9 @@ def auditor_node(state: AgentState, agent_config=None) -> Dict[str, Any]:
     evidence_score = estimate_evidence_score(draft_answer, context)
     hallucination_risk = estimate_hallucination_risk(evidence_score, context)
 
+    print(f"\n[AUDITOR] evidence_score={evidence_score:.2f} | hallucination_risk={hallucination_risk:.2f}")
+    print(f"[AUDITOR] Context chunks: {len(context)} | Draft length: {len(draft_answer)} chars")
+
     missing_info = ""
     audit_passed = True
 
@@ -117,6 +120,9 @@ def auditor_node(state: AgentState, agent_config=None) -> Dict[str, Any]:
         route_decision = "writer_with_warning"
     else:
         route_decision = "researcher"
+
+    print(f"[AUDITOR] Decision: {audit_feedback[:80]}")
+    print(f"[AUDITOR] Route: {route_decision} (iterations={iterations}, max={cfg.max_iterations})\n")
 
     trace = add_trace(
         trace,

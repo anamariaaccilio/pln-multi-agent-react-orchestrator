@@ -21,6 +21,9 @@ def _build_initial_state(question: str, system_type: str) -> AgentState:
         "draft_answer": "",
         "evidence_list": [],
         "limitations": "",
+        "tool_calls": [],
+        "tool_results": [],
+        "researcher_step": "plan",
         "audit_passed": False,
         "audit_feedback": "",
         "missing_info": "",
@@ -77,9 +80,10 @@ def multi_agent_rag(
     initial_state = _build_initial_state(question, cfg.system_type)
 
     try:
-        # recursion_limit generoso: cada ciclo researcher->auditor consume 2
-        # pasos internos de LangGraph; MAX_ITERATIONS ciclos + margen de writer.
-        recursion_limit = (cfg.max_iterations + 2) * 4
+        # recursion_limit generoso: cada ciclo ahora es
+        # researcher(plan)->tool_node->researcher(synthesize)->auditor = 4 pasos,
+        # más writer al final.
+        recursion_limit = (cfg.max_iterations + 2) * 6
         final_state = compiled_graph.invoke(
             initial_state, config={"recursion_limit": recursion_limit}
         )
