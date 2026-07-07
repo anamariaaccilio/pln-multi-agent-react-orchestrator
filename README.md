@@ -12,8 +12,7 @@ guardrails contra alucinaciones. El texto oficial del enunciado vive en
 El sistema recibe una pregunta del usuario y la procesa mediante tres
 agentes cooperando en un grafo de estados:
 
-1. **Researcher Agent** recupera evidencia de una base vectorial y redacta
-   un borrador de respuesta apoyado solo en esa evidencia.
+1. **Researcher Agent** recibe la pregunta del usuario y decide recupera evidencia de una base vectorial o de una búsqueda con DuckDuckGo y redacta un borrador de respuesta apoyado solo en esa evidencia.
 2. **Fact Auditor Agent** evalúa cuantitativamente si el borrador está
    sustentado en el contexto (`evidence_score`, `hallucination_risk`) y
    decide aprobar, rechazar (volver al Researcher) o forzar el paso al
@@ -61,14 +60,40 @@ Diagrama Mermaid del grafo interno (también en `docs/architecture.md`):
 ```mermaid
 graph TD
     A[User Question] --> B[Researcher Agent]
-    B --> C[Fact Auditor Agent]
-    C -->|Approved| D[Writer Agent]
-    C -->|Rejected and iterations available| B
-    C -->|Max iterations reached| D
-    D --> E[Final Answer]
-```
+    B -->|tool_calls| C[Tool Node]
+    C -->|observations| B
+    B -->|draft_answer| D[Fact Auditor Agent]
+    D -->|Approved| E[Writer Agent]
+    D -->|Rejected and iterations available| B
+    D -->|Max iterations reached| E
+    E --> F[Final Answer]
 
-## Multi-Agent Orchestration Layer (este módulo)
+    C -.->|knowledge_base_search| G[(ChromaDB / WikiQA)]
+    C -.->|web_search| H((DuckDuckGo))
+```
+## Data & Retrieval Layer
+
+Se utilizó el corpus público [WikiQA](https://huggingface.co/datasets/microsoft/wiki_qa) disponible en Hugging Face. Las columnas del dataset son:
+
+* `question`: pregunta
+
+* `question_id`: id de la pregunta
+
+* `document_title`: título del documento
+
+* `answer`: respuesta candidata para la pregunta
+
+* `label`: etiqueta 0/1 que indica si la respuesta responde a la pregunta
+
+Para cada `document_title` hay varias `answer`. Cada `answer` es bastante corta por lo que para la vectorización se optó por concatenar todos los `answers` que pertenecen a un mismo `document_title` y vectorizarlo como un único chunk. El código de creación de la base de conocimiento está en `src/retriever/retrieval_pipeline`.
+
+- Se usó el modelo [`sentence-transformers/all-MiniLM-L6-v2` disponible en Hugging Face](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) para vectorizar cada documento resultante. Los resultados tienen 384 dimensiones.
+
+- Se usó la base de datos vectorial ChromaDB.
+
+
+
+## Multi-Agent Orchestration Layer
 
 - Grafo LangGraph con 3 nodos (`researcher`, `auditor`, `writer`) y una
   arista condicional (`route_after_audit`).
@@ -102,8 +127,8 @@ opción del sistema.
 ## Instalación
 
 ```bash
-git clone <url-del-repo>
-cd PLN_P2
+git clone https://github.com/anamariaaccilio/pln-multi-agent-react-orchestrator.git
+cd p2_multi-agent-react-orchestrator
 python -m venv .venv && source .venv/bin/activate   # opcional
 pip install -r requirements.txt
 ```
@@ -131,32 +156,26 @@ Code o Google Colab. Importa todo desde `src/`, no duplica lógica.
 Guía detallada paso a paso: [`docs/how_to_run.md`](docs/how_to_run.md).
 
 ```python
-from src.pipeline.multi_agent_rag import multi_agent_rag
-from src.retriever.fallback_retriever import fallback_retrieve_context
-from src.llm.fallback_llm import fallback_generate_llm_response
-
-result = multi_agent_rag(
-    question="¿Cómo ayudan los guardrails a reducir alucinaciones en un sistema RAG?",
-    retriever=fallback_retrieve_context,
-    llm=fallback_generate_llm_response,
-)
-print(result["final_answer"])
-```
-
-## Cómo conectar un retriever real
-
-```python
-from src.retriever.interface import register_retriever
+from src.retriever.interface import register_retriever, initialize
 from retrieval_pipeline import retrieve_context  # función del Data & Retrieval Layer
 
 register_retriever(retrieve_context)
+initialize()
+
+# construir grafo
+
+from src.graph.build_graph import build_agent_graph
+from src.graph.visualize import visualize_graph
+
+compiled_graph = build_agent_graph()
+print(visualize_graph(compiled_graph))
+
+# llamar al sistema
+
 
 from src.pipeline.multi_agent_rag import multi_agent_rag
 result = multi_agent_rag("...", retriever=retrieve_context)
 ```
-
-Ningún agente cambia al hacer esto. Contrato completo en
-[`docs/integration_with_retriever.md`](docs/integration_with_retriever.md).
 
 ## Cómo entregar output al Evaluation Layer
 

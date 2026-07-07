@@ -6,11 +6,16 @@ from typing import Optional
 
 MERMAID_DIAGRAM = """graph TD
     A[User Question] --> B[Researcher Agent]
-    B --> C[Fact Auditor Agent]
-    C -->|Approved| D[Writer Agent]
-    C -->|Rejected and iterations available| B
-    C -->|Max iterations reached| D
-    D --> E[Final Answer]
+    B -->|tool_calls| C[Tool Node]
+    C -->|observations| B
+    B -->|draft_answer| D[Fact Auditor Agent]
+    D -->|Approved| E[Writer Agent]
+    D -->|Rejected and iterations available| B
+    D -->|Max iterations reached| E
+    E --> F[Final Answer]
+
+    C -.->|knowledge_base_search| G[(ChromaDB / WikiQA)]
+    C -.->|web_search| H((DuckDuckGo))
 """
 
 
