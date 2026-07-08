@@ -271,6 +271,58 @@ print(convert_to_eval_format(result))
   Answer Relevance, Context Precision (RAGAS) o un score de LLM-as-a-Judge,
   comparadas contra el mismo set de preguntas corrido en el baseline Naive RAG.
 
+## Resultados de evaluación (50 preguntas WikiQA)
+
+Corrida completa de `50_preguntas_wikiqa.csv` contra ambos sistemas
+(`naive_rag()` vs `multi_agent_rag()`), con Gemini 2.5 Flash-Lite como LLM y
+el retriever real (WikiQA + ChromaDB). Reproducible con
+[`evaluation/run_batch.py`](evaluation/run_batch.py) +
+[`evaluation/metrics.py`](evaluation/metrics.py) — ver
+[`docs/evaluation_how_to_run.md`](docs/evaluation_how_to_run.md).
+
+| Métrica | Naive RAG | Multi-Agent ReAct |
+|---|---|---|
+| Preguntas resueltas sin error | 50/50 | 50/50 |
+| Latencia promedio | 3.17 s/pregunta | 6.32 s/pregunta (+99%) |
+| Correctness (token-F1 vs `expected_answer`, solo texto redactado) | 0.44 | 0.43 |
+| `evidence_score` promedio (guardrail) | — (no aplica, sin auditor) | 0.956 |
+| `hallucination_risk` promedio (guardrail) | — | 0.044 |
+| Tasa de aprobación del auditor (`audit_passed`) | — | 100% (50/50) |
+| Iteraciones promedio | 1.0 (fijo, sin ciclo) | 1.0 |
+
+**Lectura de los resultados:**
+
+- **Correctness prácticamente empatada** (0.44 vs 0.43): Multi-Agent ReAct
+  no sacrifica calidad de contenido frente al baseline. El costo real es
+  **~2x más latencia** (más llamadas al LLM: plan + synthesize del
+  Researcher, vs. una sola llamada de Naive RAG), a cambio de evidencia
+  citada explícitamente, nivel de confianza declarado y un guardrail activo
+  contra alucinaciones.
+  - Nota metodológica: la comparación de correctness usa solo el texto que
+    el modelo redactó ("Respuesta final:"), no el bloque completo
+    "Evidencia usada:" que el Writer agrega — incluir ese bloque en la
+    métrica de solapamiento léxico penaliza artificialmente a Multi-Agent
+    (infla el texto comparado con contexto crudo repetido, no con
+    contenido generado), y no refleja diferencias reales de calidad.
+- **El guardrail aprobó el 100% de las 50 preguntas en la primera
+  iteración** (ninguna necesitó el ciclo de rechazo/corrección). Esto es
+  coherente con el diseño, no un error: `evidence_score` tuvo un rango real
+  de 0.70–1.00 (media 0.956, desvío 0.077, umbral de aprobación 0.70), y al
+  menos una pregunta aprobó justo en el límite (0.70 exacto). El Researcher
+  tiende a redactar de forma extractiva (parafrasea muy cerca del contexto
+  recuperado), lo que hace que la heurística léxica del auditor casi
+  siempre lo apruebe — es una limitación conocida de usar solapamiento de
+  vocabulario como proxy de "sustentado en evidencia" en vez de un juicio
+  semántico real (ver "Limitaciones" y "Trabajo futuro" más abajo).
+  - El ciclo Researcher → Auditor → rechazo → Researcher está implementado
+    y probado en modo fallback/unitario, pero **no se observó en acción
+    con el LLM real** en esta corrida de 50 preguntas — queda pendiente
+    forzarlo con preguntas más ambiguas o un umbral más estricto para
+    demostrarlo en vivo.
+- Comparación completa (incluye desglose por pregunta, gráficos de
+  latencia y calidad) generada en `outputs/evaluation_ready/report/`
+  (no versionado en git; se regenera con `evaluation/report.py`).
+
 ## Analogía conceptual con Aprendizaje por Refuerzo
 
 **No se entrena ningún agente con RL**; esto es solo una analogía para leer

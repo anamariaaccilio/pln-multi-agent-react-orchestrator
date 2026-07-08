@@ -19,7 +19,10 @@ def convert_to_eval_format(result: Dict[str, Any]) -> Dict[str, Any]:
         "system_type": result.get("system_type", "multi_agent_react"),
         "audit_passed": result.get("audit_passed", False),
         "evidence_score": result.get("evidence_score", 0.0),
-        "hallucination_risk": result.get("hallucination_risk", 1.0),
+        # None (no 1.0) cuando el sistema no calcula esta metrica (p.ej. naive_rag,
+        # que no tiene auditor): 1.0 significaria "riesgo maximo", lo cual es
+        # enganoso para un sistema que simplemente no mide esto.
+        "hallucination_risk": result.get("hallucination_risk"),
     }
 
 

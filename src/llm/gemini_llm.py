@@ -104,7 +104,12 @@ def _generate_gemini(prompt: str, **kwargs) -> str:
     """Genera una respuesta con Gemini."""
     from google import genai
 
-    model = kwargs.get("model", "gemini-2.5-flash")
+    # Default alineado con config/settings.yaml (llm.model_name). No hay wiring
+    # actual entre AgentConfig.llm_model_name y esta funcion (los agentes llaman
+    # generate(prompt) sin pasar model), asi que el default de aca es el que
+    # realmente rige. gemini-2.5-flash (sin "-lite") tiene una cuota gratuita
+    # mucho mas restrictiva y se agota rapido en un batch de 50 preguntas.
+    model = kwargs.get("model", "gemini-2.5-flash-lite")
     client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
 
     response = client.models.generate_content(
