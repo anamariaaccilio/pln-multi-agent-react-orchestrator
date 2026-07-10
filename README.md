@@ -4,8 +4,7 @@
 
 Este repositorio implementa un sistema multi-agente autónomo basado en
 ReAct, orquestado con LangGraph, sobre una base vectorial local (WikiQA) con
-guardrails contra alucinaciones. El texto oficial del enunciado vive en
-[`ENUNCIADO_PROYECTO.md`](ENUNCIADO_PROYECTO.md).
+guardrails contra alucinaciones.
 
 ## Descripción
 
@@ -207,25 +206,33 @@ PLN_P2/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-├── ENUNCIADO_PROYECTO.md
+├── .env.example
 ├── config/settings.yaml
+├── 50_preguntas_wikiqa.csv
+├── preparar_50_preguntas.py
 ├── notebooks/
 │   └── 02_multi_agent_langgraph_pipeline.ipynb
 ├── src/
 │   ├── config.py
 │   ├── agents/{state.py, prompts.py, researcher.py, auditor.py, writer.py}
-│   ├── graph/{routes.py, build_graph.py, visualize.py}
-│   ├── pipeline/{multi_agent_rag.py, eval_format.py}
-│   ├── retriever/{interface.py, fallback_retriever.py}
+│   ├── graph/{routes.py, build_graph.py, tool_node.py, tools.py, visualize.py}
+│   ├── pipeline/{naive_rag.py, multi_agent_rag.py, eval_format.py}
+│   ├── retriever/{interface.py, retrieval_pipeline.py, fallback_retriever.py}
 │   ├── llm/{interface.py, fallback_llm.py, local_llm.py, gemini_llm.py}
 │   └── utils/{trace.py, formatting.py}
 ├── examples/
 │   ├── run_multi_agent_demo.py
 │   ├── integration_example_retriever.py
 │   └── export_eval_format_demo.py
-├── outputs/{traces/, graph/, evaluation_ready/}
+├── evaluation/
+│   ├── run_batch.py, metrics.py, report.py
+│   └── key_rotation.py, merge_results.py
+├── outputs/
+│   ├── traces/            # trazas ReAct (Thought/Action/Observation) por corrida
+│   ├── graph/             # diagrama Mermaid + PNG del grafo compilado
+│   └── evaluation_ready/  # resultados de la evaluación (jsonl, csv, report/), versionados en git
 └── docs/{architecture.md, integration_with_retriever.md, evaluation_interface.md,
-         how_to_run.md, defense_script.md, troubleshooting.md}
+         how_to_run.md, evaluation_how_to_run.md, defense_script.md, troubleshooting.md}
 ```
 
 ## Ejemplo de uso
@@ -273,9 +280,9 @@ print(convert_to_eval_format(result))
 
 ## Evaluación: Naive RAG vs. Multi-Agent ReAct (50 preguntas WikiQA)
 
-El enunciado del proyecto (`ENUNCIADO_PROYECTO.md`) exige una "evaluación
-posterior con RAGAS o LLM-as-a-Judge, comparando contra un baseline Naive
-RAG" sobre un conjunto de preguntas de evaluación. Esta sección documenta
+El enunciado del proyecto exige una "evaluación posterior con RAGAS o
+LLM-as-a-Judge, comparando contra un baseline Naive RAG" sobre un conjunto de
+preguntas de evaluación. Esta sección documenta
 esa comparación: metodología, resultados cuantitativos, hallazgos
 cualitativos y limitaciones, sobre las **50 preguntas** definidas en
 `50_preguntas_wikiqa.csv`.
@@ -576,12 +583,24 @@ Detalle completo en [`docs/architecture.md`](docs/architecture.md) sección 6.
 - Sustituir la heurística léxica del Fact Auditor por un juez basado en NLI
   o en un segundo LLM (LLM-as-a-Judge interno, no solo el externo del
   Evaluation Layer).
+- Correr RAGAS / LLM-as-a-Judge (faithfulness, answer_relevancy,
+  context_precision) sobre las 50 preguntas junto a las métricas propias ya
+  reportadas — el camino ya está implementado en
+  `evaluation/metrics.py --with-ragas`, falta la corrida.
 - Persistir historial de trazas por sesión para análisis agregado de tasas
   de aprobación/rechazo.
 - Agregar un cuarto agente opcional (por ejemplo, un Planificador que
   descomponga preguntas complejas antes del Researcher Agent).
 - Cachear resultados de `retrieve_context` para preguntas repetidas dentro
   del mismo batch de evaluación.
+- Extender la evaluación a un segundo dataset (por ejemplo Financial-QA)
+  para confirmar si el patrón de subgrupos encontrado en WikiQA (Multi-Agent
+  gana cuando hace falta `web_search`, Naive gana en precisión cuando no)
+  se sostiene en otro dominio.
+- Sumar al repositorio un perfil de configuración liviano ("demo", modo
+  fallback) junto al actual `config/settings.yaml` (ajustado para la
+  corrida real con Gemini + ChromaDB), para poder alternar entre ambos con
+  un solo cambio de archivo en vez de editar valores a mano.
 
 ## Documentación adicional
 
@@ -589,5 +608,6 @@ Detalle completo en [`docs/architecture.md`](docs/architecture.md) sección 6.
 - [`docs/integration_with_retriever.md`](docs/integration_with_retriever.md) — contrato del retriever real.
 - [`docs/evaluation_interface.md`](docs/evaluation_interface.md) — formato de entrega para evaluación.
 - [`docs/how_to_run.md`](docs/how_to_run.md) — guía paso a paso.
+- [`docs/evaluation_how_to_run.md`](docs/evaluation_how_to_run.md) — cómo reproducir la evaluación de 50 preguntas.
 - [`docs/defense_script.md`](docs/defense_script.md) — guion de exposición.
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — errores comunes y soluciones.
