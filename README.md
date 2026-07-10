@@ -1,4 +1,4 @@
-# Sistema Operativo de Agentes Cognitivos para Inteligencia Competitiva
+# Sistema Operativo de Agentes Cognitivos
 
 **Multi-Agent ReAct con LangGraph** — Proyecto final de Arquitecturas de Modelos de Lenguaje.
 
