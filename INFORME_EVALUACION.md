@@ -78,11 +78,11 @@ fuera de esta corrida):
 ¹ Diferencia **no significativa** (prueba pareada, `p>0.7`) — pero el
 promedio esconde un patrón real por subgrupo, ver §4.1.
 
-![Comparación de latencia](docs/evaluation_results/latency_comparison.png)
+![Comparación de latencia](outputs/evaluation_ready/report/latency_comparison.png)
 
-![Comparación de calidad](docs/evaluation_results/quality_metrics_comparison.png)
+![Comparación de calidad](outputs/evaluation_ready/report/quality_metrics_comparison.png)
 
-![Distribución de latencia por pregunta](docs/evaluation_results/latency_distribution.png)
+![Distribución de latencia por pregunta](outputs/evaluation_ready/report/latency_distribution.png)
 
 ## 4. Análisis
 

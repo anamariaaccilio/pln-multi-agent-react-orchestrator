@@ -1,0 +1,18 @@
+{
+  "n": 50,
+  "naive_mean": 0.4443,
+  "multi_mean": 0.4311,
+  "mean_diff_multi_minus_naive": -0.0132,
+  "paired_ttest_t": -0.2868,
+  "paired_ttest_p": 0.7755,
+  "wilcoxon_stat": 587.0,
+  "wilcoxon_p": 0.9918,
+  "n_multi_better": 26,
+  "n_naive_better": 22,
+  "n_tied": 2,
+  "n_naive_gives_up": 9,
+  "giveup_subset_naive_mean": 0.0933,
+  "giveup_subset_multi_mean": 0.3522,
+  "non_giveup_subset_naive_mean": 0.5213,
+  "non_giveup_subset_multi_mean": 0.4485
+}

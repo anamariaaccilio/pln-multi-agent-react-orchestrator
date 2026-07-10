@@ -320,8 +320,9 @@ el retriever real (WikiQA + ChromaDB). Reproducible con
     forzarlo con preguntas más ambiguas o un umbral más estricto para
     demostrarlo en vivo.
 - Comparación completa (incluye desglose por pregunta, gráficos de
-  latencia y calidad) generada en `outputs/evaluation_ready/report/`
-  (no versionado en git; se regenera con `evaluation/report.py`).
+  latencia y calidad, y el análisis de significancia estadística) en
+  [`outputs/evaluation_ready/`](outputs/evaluation_ready/) — versionado en
+  git como parte del entregable, y regenerable con `evaluation/report.py`.
 
 ## Analogía conceptual con Aprendizaje por Refuerzo
 

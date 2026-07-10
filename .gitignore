@@ -31,8 +31,12 @@ outputs/traces/*
 !outputs/traces/.gitkeep
 outputs/graph/*
 !outputs/graph/.gitkeep
-outputs/evaluation_ready/*
-!outputs/evaluation_ready/.gitkeep
+
+# outputs/evaluation_ready/ SI se versiona: son los resultados de la
+# evaluacion (entregable), no basura transitoria. Solo se ignoran archivos
+# de estado/debug de una corrida puntual, sin valor como entregable.
+outputs/evaluation_ready/.key_rotation_state.json
+outputs/evaluation_ready/*.log
 
 # SO / editores
 .DS_Store
